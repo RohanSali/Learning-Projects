@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Breast Cancer Predictor</title>
+</head>
+<body>
+    <h2>Enter 31 Feature Values</h2>
+    <form method="POST" action="/predict">
+        {% for i in range(31) %}
+            <input type="text" name="f{{ i }}" required><br>
+        {% endfor %}
+        <input type="submit" value="Predict">
+    </form>
+    <h3>{{ result }}</h3>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breast Cancer Diagnosis System | Medical AI Assistant</title>
+    <meta name="description" content="Professional breast cancer diagnosis system using machine learning for healthcare professionals">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <span class="medical-icon">🔬</span>
+                <h1>Breast Cancer Diagnosis System</h1>
+                <p>Advanced AI-powered diagnostic tool for healthcare professionals</p>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h3>📋 Clinical Instructions</h3>
+                <p>Enter the diagnostic parameters below to receive an AI-powered breast cancer diagnosis. You may leave any field empty to use the default mean value from our validated dataset. The system will automatically generate a unique case ID and provide a comprehensive analysis with confidence scoring.</p>
+            </div>
+
+            {% if error %}
+            <div class="error-message">
+                <strong>Clinical Alert:</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/predict" id="diagnosisForm">
+                <div class="form-section">
+                    <h2>📊 Diagnostic Parameters</h2>
+                    
+                    <div class="features-grid">
+                        <!-- Mean Features -->
+                        <div class="feature-group">
+                            <h3>Mean Values</h3>
+                            {% for feature, name in features.items() %}
+                                {% if 'mean' in feature %}
+                                <div class="input-group">
+                                    <label for="feature_{{ feature }}">{{ name }}</label>
+                                    <input type="number" step="any" id="feature_{{ feature }}" name="feature_{{ feature }}" placeholder="Enter clinical value">
+                                    <div class="default-value">Default: {{ "%.4f"|format(means[feature]) }}</div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- SE Features -->
+                        <div class="feature-group">
+                            <h3>Standard Error Values</h3>
+                            {% for feature, name in features.items() %}
+                                {% if '_se' in feature %}
+                                <div class="input-group">
+                                    <label for="feature_{{ feature }}">{{ name }}</label>
+                                    <input type="number" step="any" id="feature_{{ feature }}" name="feature_{{ feature }}" placeholder="Enter clinical value">
+                                    <div class="default-value">Default: {{ "%.4f"|format(means[feature]) }}</div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Worst Features -->
+                        <div class="feature-group">
+                            <h3>Worst Values</h3>
+                            {% for feature, name in features.items() %}
+                                {% if 'worst' in feature %}
+                                <div class="input-group">
+                                    <label for="feature_{{ feature }}">{{ name }}</label>
+                                    <input type="number" step="any" id="feature_{{ feature }}" name="feature_{{ feature }}" placeholder="Enter clinical value">
+                                    <div class="default-value">Default: {{ "%.4f"|format(means[feature]) }}</div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn">🔍 Generate Diagnosis Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+</body>
+</html>
