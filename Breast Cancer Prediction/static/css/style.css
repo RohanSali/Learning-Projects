@@ -462,6 +462,9 @@ body {
 .modal-footer {
     padding: 20px 40px 40px;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
 }
 
 .modal-btn {
@@ -478,6 +481,14 @@ body {
 .modal-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(63, 81, 181, 0.3);
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+
+.download-btn:hover {
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
 }
 
 /* Responsive Design */
