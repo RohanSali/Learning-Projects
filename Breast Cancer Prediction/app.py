@@ -6,10 +6,20 @@ import pandas as pd
 import random
 
 app = Flask(__name__)
-model = joblib.load('logistic_model.pkl')
-scaler = joblib.load('scaler.pkl')
 
-# Load the dataset to calculate mean values
+# Compatibility shim for older pickles that reference `numpy._core`.
+# Some models serialized with older NumPy versions expect `numpy._core` to exist.
+# Map `numpy._core` to `numpy.core` in sys.modules so unpickling succeeds.
+import sys, importlib
+try:
+    if 'numpy._core' not in sys.modules:
+        sys.modules['numpy._core'] = importlib.import_module('numpy.core')
+except Exception as shim_exc:
+    # Log the shim failure; loading may still fail later and raise a clear error.
+    print(f"Warning: numpy._core compatibility shim failed: {shim_exc}")
+
+# Load the dataset early to compute means/stds and support a fallback scaler
+# (needed before attempting to load the scaler below)
 df = pd.read_csv('data.csv')
 # Remove the unnamed column if it exists
 if df.columns[-1].startswith('Unnamed'):
@@ -17,8 +27,58 @@ if df.columns[-1].startswith('Unnamed'):
 
 # Get feature columns (excluding diagnosis and id)
 feature_columns = [col for col in df.columns if col not in ['diagnosis', 'id']]
-# Calculate mean values for each feature
+# Calculate mean and std values for each feature
 feature_means = df[feature_columns].mean().to_dict()
+feature_stds = df[feature_columns].std(ddof=0).to_dict()
+
+# Load the trained model
+model = joblib.load('logistic_model.pkl')
+
+# Attempt to load the scaler; first check whether the pickle references
+# `numpy._core` (which can trigger incompatible C-extension imports). If it
+# does, skip loading and use a fallback computed from the dataset.
+import os
+scaler_path = 'scaler.pkl'
+_use_fallback = False
+if os.path.exists(scaler_path):
+    try:
+        with open(scaler_path, 'rb') as f:
+            content = f.read()
+        if b'numpy._core' in content:
+            print('scaler.pkl references numpy._core; skipping joblib load and using fallback')
+            _use_fallback = True
+    except Exception as e:
+        print(f'Warning while inspecting scaler.pkl: {e}; will attempt joblib.load and fallback on error')
+
+if not _use_fallback:
+    try:
+        scaler = joblib.load(scaler_path)
+    except Exception as e:
+        print(f"Warning: could not load scaler.pkl ({e}). Using fallback scaler computed from dataset.")
+        _use_fallback = True
+
+if _use_fallback:
+    # Prepare fallback mean/std arrays matching expected input order (id, then features)
+    id_mean = df['id'].mean() if 'id' in df.columns else 0.0
+    id_std = df['id'].std(ddof=0) if 'id' in df.columns else 1.0
+    means = [id_mean] + [feature_means[f] for f in feature_columns]
+    stds = [id_std] + [max(feature_stds.get(f, 0.0), 1.0) for f in feature_columns]
+
+    class FallbackScaler:
+        def __init__(self, mean, scale):
+            import numpy as _np
+            self.mean_ = _np.array(mean, dtype=float)
+            self.scale_ = _np.array(scale, dtype=float)
+            # avoid division by zero
+            self.scale_[self.scale_ == 0] = 1.0
+            self.n_features_in_ = int(self.mean_.shape[0])
+
+        def transform(self, X):
+            import numpy as _np
+            X = _np.asarray(X, dtype=float)
+            return (X - self.mean_) / self.scale_
+
+    scaler = FallbackScaler(means, stds)
 
 # Feature names for display
 feature_names = {
@@ -141,6 +201,8 @@ def predict():
                              features=feature_names, 
                              means=feature_means,
                              error=error_msg)
+
+print('app module initialized')
 
 if __name__ == "__main__":
     app.run(debug=True)
