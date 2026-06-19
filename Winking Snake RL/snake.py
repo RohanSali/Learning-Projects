@@ -79,7 +79,7 @@ class Snake():
             turn = self.nodes[i-1].whichTurn
 
             last_pos = self.nodes[i].position
-            last_face = self.nodes[i].last_facing
+            last_face = self.nodes[i].facing
 
             self.nodes[i].position = [x, y]
             self.nodes[i].facing = face
@@ -105,7 +105,7 @@ class Snake():
             turn = self.nodes[i-1].whichTurn
 
             last_pos = self.nodes[i].position
-            last_face = self.nodes[i].last_facing
+            last_face = self.nodes[i].facing
 
             self.nodes[i].position = [x, y]
             self.nodes[i].facing = face
@@ -135,7 +135,7 @@ class Snake():
             turn = self.nodes[i-1].whichTurn
 
             last_pos = self.nodes[i].position
-            last_face = self.nodes[i].last_facing
+            last_face = self.nodes[i].facing
 
             self.nodes[i].position = [x, y]
             self.nodes[i].facing = face
@@ -161,14 +161,14 @@ class Snake():
     def wink(self):
         """Special Fucnction that gives snake ability to get more score by shrinking its size directly 2 (initial point) with some penuly."""
         if self.length > 2 :
-            pos = self.nodes[2].position
-            face = self.nodes[2].facing
-            last_pos = self.nodes[2].last_pos
-            last_face = self.nodes[2].last_facing
+            pos = self.nodes[1].position
+            face = self.nodes[1].facing
+            last_pos = self.nodes[1].last_pos
+            last_face = self.nodes[1].last_facing
 
-            self.tail.position = pos
+            self.tail.position = pos.copy()
             self.tail.facing = face
-            self.tail.last_pos = last_pos
+            self.tail.last_pos = last_pos.copy()
             self.tail.last_facing = last_face
 
             for _ in range(self.length-1):
@@ -309,7 +309,7 @@ def main():
     score = 0
     run = True
     while run:
-        clock.tick(2)  # FPS = 2
+        clock.tick(5)  # FPS = 2
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
