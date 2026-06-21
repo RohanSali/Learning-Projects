@@ -272,7 +272,7 @@ def main():
                 pygame.quit()
                 quit()
 
-        action = random.choice(["ahead", "right", "left"])
+        action = random.choice(["ahead", "right", "left", "wink"])
 
         print("Action Taken: ", action)
 
