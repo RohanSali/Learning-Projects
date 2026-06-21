@@ -31,7 +31,7 @@ class SnakeNode :
         self.facing = facing      # 0: Up,  1: Right,  2: Bottom,  3: Left
         self.nodeType = nodeType  # 0: Head, 1: Tail, 2: Body
         self.whichTurn = 0        # 0: no turn, 1: right, 2: left
-        self.last_pos = position
+        self.last_pos = position.copy()
         self.last_facing = facing
 
 class Snake():
@@ -48,13 +48,13 @@ class Snake():
     def get_next_node_loc(self, parent_position, parent_facing):
         child_pos = None
         if parent_facing == 0:  # Facing Top
-            child_pos = (parent_position[0], parent_position[1] + 1)
+            child_pos = [parent_position[0], parent_position[1] + 1]
         elif parent_facing == 1:  # Facing Right
-            child_pos = (parent_position[0] - 1, parent_position[1])
+            child_pos = [parent_position[0] - 1, parent_position[1]]
         elif parent_facing == 2:  # Facing Bottom
-            child_pos = (parent_position[0], parent_position[1] - 1)
+            child_pos = [parent_position[0], parent_position[1] - 1]
         elif parent_facing == 3:  # Facing Left
-            child_pos = (parent_position[0] + 1, parent_position[1])
+            child_pos = [parent_position[0] + 1, parent_position[1]]
         
         return child_pos
 
@@ -63,7 +63,7 @@ class Snake():
         facing = self.tail.facing
         body_node = SnakeNode(position=position, facing=facing, nodeType=2)
 
-        self.tail.position = self.tail.last_pos
+        self.tail.position = self.tail.last_pos.copy()
         self.tail.facing = self.tail.last_facing
 
         temp_tail = self.nodes.pop()
@@ -71,14 +71,15 @@ class Snake():
         self.nodes.append(temp_tail)
 
         self.length += 1
+    
+    def move_body(self):
+        """Move all body nodes to follow the previous node."""
+        for i in reversed(range(1, self.length)):
+            x, y = self.nodes[i - 1].position
+            face = self.nodes[i - 1].facing
+            turn = self.nodes[i - 1].whichTurn
 
-    def move(self):
-        for i in reversed(range(1, self.length)): 
-            x , y = self.nodes[i-1].position
-            face = self.nodes[i-1].facing
-            turn = self.nodes[i-1].whichTurn
-
-            last_pos = self.nodes[i].position
+            last_pos = self.nodes[i].position.copy()
             last_face = self.nodes[i].facing
 
             self.nodes[i].position = [x, y]
@@ -87,75 +88,32 @@ class Snake():
             self.nodes[i].last_facing = last_face
             self.nodes[i].whichTurn = turn
 
-        if self.head.facing == 0:
-            self.head.position[1] -= 1    # Move Up
-        elif self.head.facing == 1:
-            self.head.position[0] += 1    # Move Right
-        elif self.head.facing == 2:
-            self.head.position[1] += 1    # Move Down
-        elif self.head.facing == 3:
-            self.head.position[0] -= 1    # Move Left
-        
+    def move_head(self):
+        """Move head one step in its current direction."""
+        if self.head.facing == 0:      # Up
+            self.head.position[1] -= 1
+        elif self.head.facing == 1:    # Right
+            self.head.position[0] += 1
+        elif self.head.facing == 2:    # Down
+            self.head.position[1] += 1
+        elif self.head.facing == 3:    # Left
+            self.head.position[0] -= 1
+
+    def ahead(self):
+        self.move_body()
+        self.move_head()
         self.head.whichTurn = 0
 
     def right(self):
-        for i in reversed(range(1, self.length)): 
-            x , y = self.nodes[i-1].position
-            face = self.nodes[i-1].facing
-            turn = self.nodes[i-1].whichTurn
-
-            last_pos = self.nodes[i].position
-            last_face = self.nodes[i].facing
-
-            self.nodes[i].position = [x, y]
-            self.nodes[i].facing = face
-            self.nodes[i].last_pos = last_pos
-            self.nodes[i].last_facing = last_face
-            self.nodes[i].whichTurn = turn
-
-        if self.head.facing == 0:
-            self.head.position[0] += 1    # Move Right
-            self.head.facing = 1
-        elif self.head.facing == 1:
-            self.head.position[1] += 1    # Move Down
-            self.head.facing = 2
-        elif self.head.facing == 2:
-            self.head.position[0] -= 1    # Move Left
-            self.head.facing = 3
-        elif self.head.facing == 3:
-            self.head.position[1] -= 1    # Move Up
-            self.head.facing = 0
-
+        self.move_body()
+        self.head.facing = (self.head.facing + 1) % 4  # Look towards Right
+        self.move_head()
         self.head.whichTurn = 1
 
     def left(self):
-        for i in reversed(range(1, self.length)): 
-            x , y = self.nodes[i-1].position
-            face = self.nodes[i-1].facing
-            turn = self.nodes[i-1].whichTurn
-
-            last_pos = self.nodes[i].position
-            last_face = self.nodes[i].facing
-
-            self.nodes[i].position = [x, y]
-            self.nodes[i].facing = face
-            self.nodes[i].last_pos = last_pos
-            self.nodes[i].last_facing = last_face
-            self.nodes[i].whichTurn = turn
-
-        if self.head.facing == 0:
-            self.head.position[0] -= 1    # Move Left
-            self.head.facing = 3
-        elif self.head.facing == 1:
-            self.head.position[1] -= 1    # Move Up
-            self.head.facing = 0
-        elif self.head.facing == 2:
-            self.head.position[0] += 1    # Move Right
-            self.head.facing = 1
-        elif self.head.facing == 3:
-            self.head.position[1] += 1    # Move Down
-            self.head.facing = 2
-
+        self.move_body()
+        self.head.facing = (self.head.facing - 1) % 4  # Look towards Left
+        self.move_head()
         self.head.whichTurn = 2
     
     def wink(self):
@@ -177,7 +135,7 @@ class Snake():
             self.nodes.append(self.tail)
             self.length = 2
         else :
-            self.move()
+            self.ahead()
         
 
     def didCollide(self, grid):
@@ -188,8 +146,8 @@ class Snake():
         if x < 0 or x >= grid.layout[0] or y < 0 or y >= grid.layout[1]:
             collide = True
 
-        for i in range(2,self.length):
-            if (x == self.nodes[i].position[0]) and (y == self.nodes[i].position[1]):
+        for node in self.nodes[2:]:
+            if node.position == [x, y]:
                 collide = True
 
         return collide
@@ -231,15 +189,6 @@ class Apple:
     def __init__(self, position):
         self.position = position
         self.eaten = False
-        #self.age = 0       # Will Implement Later
-        #self.life = 10
-
-    # def live(self):
-    #     self.age += 1
-    #     if self.age >= self.life:
-    #         return False
-    #     else:
-    #         return True
 
     def draw(self, win, grid):
         x, y = grid.get_location(self.position[0], self.position[1])
@@ -255,8 +204,8 @@ class Grid:
         self.cell_size = ((self.size[0] / self.layout[0]), (self.size[1] / self.layout[1]))
 
     def get_cell(self, x, y):
-        cell_x = self.x - x // (self.cell_size[0])
-        cell_y = self.y - y // (self.cell_size[1])
+        cell_x = x - self.x // (self.cell_size[0])
+        cell_y = y - self.y // (self.cell_size[1])
         return [cell_x, cell_y]
     
     def get_location(self, cell_x, cell_y):
@@ -268,14 +217,15 @@ class Grid:
         win.blit(self.IMG, (self.x, self.y))
 
 
-def draw_window(win, score, grid, apple, snake):
+def draw_window(win, score, grid, apples, snake):
     win.blit(BG_IMG, (0,0))
 
     text = STAT_FONT.render("Score: " + str(score), 1, (0,0,0))
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 3))
     
     grid.draw(win)
-    apple.draw(win, grid)
+    for apple in apples:
+        apple.draw(win, grid)
     snake.draw(win, grid)
 
     pygame.display.update()
@@ -285,43 +235,49 @@ def main():
     clock = pygame.time.Clock()
 
     grid  = Grid(grid_layout=GRID_LAYOUT, grid_size=GIRD_SIZE, grid_location=GRID_LOC)
-    # apple = Apple(position=[0,0])
-    # snake = Snake(position=[5,5], facing=1)
-
-    a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
-    apple = Apple(position=[a_cell_x, a_cell_y])
 
     s_cell_x , s_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
     directions = [0,1,2,3]  # Up, Right, Down, Left
     if (s_cell_x == 0):
-        directions.remove(3)  # must not face left
-    if (s_cell_x == grid.layout[0]-1):
         directions.remove(1)  # must not face right
+    if (s_cell_x == grid.layout[0]-1):
+        directions.remove(3)  # must not face left
     if (s_cell_y == 0):
-        directions.remove(0)  # must not face up
-    if (s_cell_y == grid.layout[1]-1):
         directions.remove(2)  # must not face down
-    
+    if (s_cell_y == grid.layout[1]-1):
+        directions.remove(0)  # must not face up
     facing = random.choice(directions)
-
     snake = Snake(position=[s_cell_x, s_cell_y], facing=facing)
+
+    apples = []
+    filled_positions = []
+    apple_count = 1
+    for _ in range(apple_count):
+        a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
+           
+        while [a_cell_x, a_cell_y] in filled_positions or ([a_cell_x, a_cell_y] in [snake.head.position, snake.tail.position]):
+            a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
+
+        apple = Apple(position=[a_cell_x, a_cell_y])
+        apples.append(apple)
+        if [a_cell_x, a_cell_y] not in filled_positions: filled_positions.append([a_cell_x, a_cell_y])
 
     score = 0
     run = True
     while run:
-        clock.tick(5)  # FPS = 2
+        clock.tick(5)  # FPS = 5
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 quit()
 
-        action = random.choice(["ahead", "right", "left", "wink"])
+        action = random.choice(["ahead", "right", "left"])
 
         print("Action Taken: ", action)
 
         if action == "ahead":
-            snake.move()
+            snake.ahead()
         elif action == "right":
             snake.right()
         elif action == "left":
@@ -330,22 +286,28 @@ def main():
             snake.wink()
         else:
             print("INVALID ACTION!!!")
+        for apple in apples:
+            if (snake.head.position == apple.position):
+                apple.eaten = True
+                snake.add_node()
+                score += 1
 
-        if (snake.head.position == apple.position):
-            apple.eaten = True
-            snake.add_node()
-            score += 1
+        for apple in apples:
+            if apple.eaten :
+                apples.remove(apple)
+                filled_positions.remove(apple.position)
+                snake_positions = []
 
-        if apple.eaten :
-            a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
-            snake_positions = []
-            for i in snake.nodes:
-                snake_positions.append(i.position)
-            
-            while [a_cell_x, a_cell_y] in snake_positions:
-                a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
-                    
-            apple = Apple(position=[a_cell_x, a_cell_y])
+                for node in snake.nodes:
+                    snake_positions.append(node.position)
+                        
+                while [a_cell_x, a_cell_y] in filled_positions or ([a_cell_x, a_cell_y] in snake_positions):
+                    a_cell_x , a_cell_y = random.randrange(grid.layout[0]), random.randrange(grid.layout[1])
+                
+                new_apple = Apple(position=[a_cell_x, a_cell_y])
+                apples.append(new_apple)
+                if [a_cell_x, a_cell_y] not in filled_positions: filled_positions.append([a_cell_x, a_cell_y])
+
 
         if snake.didCollide(grid):
             print("Snake Collided !")
@@ -354,7 +316,14 @@ def main():
             pygame.quit()
             quit()
 
-        draw_window(win, score, grid, apple, snake)
+        if (snake.length + apple_count == (grid.layout[0] * grid.layout[1])):
+            print("Grid is Full")
+            print("Final Score:", score)
+            run = False
+            pygame.quit()
+            quit()
+
+        draw_window(win, score, grid, apples, snake)
 
 if __name__ == "__main__":
-    main()
+        main()
