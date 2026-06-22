@@ -16,15 +16,16 @@ class WinkerSnake(BaseEnvironment):
     # Finally a state is : ndarray as : [head_x, head_y, head_facing, snake_length, closest_food_distance, is_food_up, is_food_right, is_food_down, is_food_left, is_danger_ahead, is_danger_right_side, is_danger_left_side, is_grid_full]
 
 
-    # Actions in our env comprise of : ahead, left, right, wink
-    # 1. ahead : move snake 1 step forward in current facing direction
-    # 2. left : move snake 1 step forward in left of current facing direction
-    # 3. right : move snake 1 step forward in right of current facing direction
-    # 4. wink : shirnk the size with some penulty and if snake has no body nodes it moves 1 step forward
+    # Actions in our env comprise of : ahead, right, left, wink
+    # 1. ahead or 0 : move snake 1 step forward in current facing direction
+    # 2. right or 1 : move snake 1 step forward in right of current facing direction
+    # 3. left or 2 : move snake 1 step forward in left of current facing direction
+    # 4. wink or 3 : shirnk the size with some penulty and if snake has no body nodes it moves 1 step forward
     def __init__(self):
         super().__init__()
         self.current_state = np.zeros(13)
         self._intialized = False
+        self.nodes_added = 0
 
     def env_init(self, env_info = {
         'grid_layout' : (10, 10),
@@ -32,15 +33,12 @@ class WinkerSnake(BaseEnvironment):
         'grid_location' : (20, 80),
         'apple_count' : 1,
     }):
-        self.grid_layout = env_info['grid_layout']
-        self.grid_size = env_info['grid_size']
-        self.grid_location = env_info['grid_location']
         self.apple_count = env_info['apple_count']
 
         self.grid = Grid(
-            grid_layout=self.grid_layout,
-            grid_size=self.grid_size,
-            grid_location=self.grid_location
+            grid_layout = env_info['grid_layout'],
+            grid_size = env_info['grid_size'],
+            grid_location = env_info['grid_location']
             )
 
         self.snake = None
@@ -63,13 +61,33 @@ class WinkerSnake(BaseEnvironment):
         return observation
 
     def env_step(self, action):
-        pass
+        eaten = self.perform_action(action)
+
+        observation = self.get_observation()
+        self.current_state = observation
+
+        reward, terminal = self.get_reward(action=action, eaten=eaten, is_grid_full=observation[-1])
+
+        self.reward_obs_term = (reward, observation, terminal)
+        return self.reward_obs_term
 
     def env_cleanup(self):
-        return None
+        self.snake = None
+        self.apples = []
+        self.current_state = np.zeros(13)
+        self.reward_obs_term = None
+        self.nodes_added = 0
     
     def env_message(self, message):
-        return None
+        if message == "score":
+            return self.nodes_added
+        if message == "debug":
+            return {
+                "head": self.snake.head.position,
+                "facing": self.snake.head.facing,
+                "length": self.snake.length,
+                "apples": [a.position for a in self.apples],
+            }
     
     def reset_env(self):
         s_cell_x, s_cell_y = random.randrange(self.grid.layout[0]), random.randrange(self.grid.layout[1])
@@ -86,6 +104,7 @@ class WinkerSnake(BaseEnvironment):
 
         self.snake = Snake(position=[s_cell_x, s_cell_y], facing=facing)
 
+        self.apples = []
         filled_positions = []
         for _ in range(self.apple_count):
             a_cell_x, a_cell_y = random.randrange(self.grid.layout[0]), random.randrange(self.grid.layout[1])
@@ -100,6 +119,8 @@ class WinkerSnake(BaseEnvironment):
 
             if [a_cell_x, a_cell_y] not in filled_positions:
                 filled_positions.append([a_cell_x, a_cell_y])
+        
+        self.nodes_added = 0
 
     def get_observation(self):
         snake_head = self.snake.head.position
@@ -116,9 +137,9 @@ class WinkerSnake(BaseEnvironment):
         food_intuition_vector = get_food_intuition_vector(snake_head, self.apples)
 
         snake_body_positions = [node.position for node in self.snake.nodes]
-        danger_vector = get_danger_vector(snake_head, snake_facing, snake_body_positions, self.grid_layout)
+        danger_vector = get_danger_vector(snake_head, snake_facing, snake_body_positions, self.grid.layout)
 
-        is_grid_full = 1 if (self.apple_count + self.snake.length == (self.grid.layout[0] * self.grid.layout[1])) else 0
+        is_grid_full = 1 if (self.apple_count + self.snake.length >= (self.grid.layout[0] * self.grid.layout[1])) else 0
 
         observation = np.array(
             [
@@ -134,8 +155,62 @@ class WinkerSnake(BaseEnvironment):
         )
 
         return observation
+    
+    def perform_action(self, action):
+        is_eaten = False
 
+        if action == 0:
+            self.snake.ahead()
+        elif action == 1:
+            self.snake.right()
+        elif action == 2:
+            self.snake.left()
+        elif action == 3:
+            self.snake.wink()
 
+        for apple in self.apples:
+            if self.snake.head.position == apple.position:
+                apple.eaten = True
+                is_eaten = True
+                self.snake.add_node()
+                self.nodes_added += 1  # Only for display purpose
+
+        snake_positions = [node.position for node in self.snake.nodes]
+        apple_positions = [apple.position for apple in self.apples]
+        for apple in list(self.apples):
+            if apple.eaten:
+                self.apples.remove(apple)
+                apple_positions.remove(apple.position)
+                
+                a_cell_x, a_cell_y = random.randrange(self.grid.layout[0]), random.randrange(self.grid.layout[1])
+                while [a_cell_x, a_cell_y] in  apple_positions + snake_positions:
+                    a_cell_x, a_cell_y = random.randrange(self.grid.layout[0]), random.randrange(self.grid.layout[1])
+
+                new_apple = Apple(position=[a_cell_x, a_cell_y])
+                self.apples.append(new_apple)
+        
+        return is_eaten
+    
+    def get_reward(self, action, eaten, is_grid_full):
+        reward = 0.0
+        terminal = False
+        if action == 3:   
+            reward -= (2/self.snake.length) * self.reward_obs_term[0]   # wink action
+        else:       
+            reward -= 0.01                             # For other actions
+
+        if eaten:
+            reward += 5
+
+        if self.snake.didCollide(self.grid):
+            reward -= 10
+            terminal = True
+        
+        if is_grid_full == 1:
+            reward -= 10
+            terminal = True
+
+        return reward, terminal
 
 # Utility Functions:
 def manhattan_distance(pos_a, pos_b):

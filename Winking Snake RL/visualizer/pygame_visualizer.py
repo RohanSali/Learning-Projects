@@ -38,7 +38,7 @@ class Visualizer:
         pygame.font.init()
         self.win = pygame.display.set_mode((self.win_width, self.win_height))
         self.clock = pygame.time.Clock()
-        self.stat_font = pygame.font.SysFont("comicsans", 20)
+        self.stat_font = pygame.font.SysFont("comicsans", 15)
 
         cell_size = self.cell_size
         self.bg_img = pygame.image.load(os.path.join(IMG_DIR, "BgIMG.png"))
@@ -64,14 +64,17 @@ class Visualizer:
         if self.clock is not None:
             self.clock.tick(self.fps)
 
-    def render(self, grid, apples, snake, score):
+    def render(self, grid, apples, snake, score, cumulative_reward):
         if not self._initialized:
             self.init()
 
         self.win.blit(self.bg_img, (0, 0))
 
-        text = self.stat_font.render("Score: " + str(score), 1, (0, 0, 0))
-        self.win.blit(text, (self.win_width - 10 - text.get_width(), 3))
+        score_text = self.stat_font.render("Score: " + str(score), 1, (0, 0, 0))
+        self.win.blit(score_text, (self.win_width - 20 - score_text.get_width(), 30))
+
+        cum_re_text = self.stat_font.render("Cumu. Reward: " + str(cumulative_reward), 1, (0, 0, 0))
+        self.win.blit(cum_re_text, (self.win_width - 20 - cum_re_text.get_width(), 50))
 
         # Grid
         self.win.blit(self.grid_img, (grid.x, grid.y))
