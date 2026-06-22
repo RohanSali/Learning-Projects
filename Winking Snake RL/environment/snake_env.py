@@ -1,5 +1,11 @@
+import sys
+from pathlib import Path
+ROOT_DIR = Path(__file__).resolve().parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 import random
-from .environment import BaseEnvironment
+from rlglue.environment import BaseEnvironment
 import numpy as np
 from .snake import Grid, Snake, Apple
 
