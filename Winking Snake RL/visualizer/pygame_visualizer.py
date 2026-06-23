@@ -8,11 +8,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parent
 IMG_DIR = os.path.join(ROOT_DIR, "imgs")
 
-GRID_SIZE = (400, 400)
-GRID_LOC = (20, 80)
+GRID_SIZE = (500, 500)
+GRID_LOC = (40, 200)
 
-WIN_WIDTH = 440
-WIN_HEIGHT = 500
+WIN_WIDTH = 580
+WIN_HEIGHT = 740
 
 
 class Visualizer:
@@ -41,8 +41,8 @@ class Visualizer:
         self.stat_font = pygame.font.SysFont("comicsans", 15)
 
         cell_size = self.cell_size
-        self.bg_img = pygame.image.load(os.path.join(IMG_DIR, "BgIMG.png"))
-        self.grid_img = pygame.image.load(os.path.join(IMG_DIR, self.grid_name))
+        self.bg_img = pygame.image.load(os.path.join(IMG_DIR, "BgIMG2.png"))
+        self.grid_img = pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, self.grid_name)), GRID_SIZE)
         self.snake_imgs = [
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Head.png")), cell_size),
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Tail.png")), cell_size),

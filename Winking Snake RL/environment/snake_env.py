@@ -32,11 +32,12 @@ class WinkerSnake(BaseEnvironment):
         self.current_state = np.zeros(13)
         self._intialized = False
         self.nodes_added = 0
+        self.no_food_eaten_count = 0
 
     def env_init(self, env_info = {
         'grid_layout' : (10, 10),
-        'grid_size' : (400, 400),
-        'grid_location' : (20, 80),
+        'grid_size' : (500, 500),
+        'grid_location' : (40, 200),
         'apple_count' : 1,
     }):
         self.apple_count = env_info['apple_count']
@@ -83,7 +84,8 @@ class WinkerSnake(BaseEnvironment):
         self.current_state = np.zeros(13)
         self.reward_obs_term = None
         self.nodes_added = 0
-    
+        self.no_food_eaten_count = 0
+
     def env_message(self, message):
         if message == "score":
             return self.nodes_added
@@ -127,6 +129,7 @@ class WinkerSnake(BaseEnvironment):
                 filled_positions.append([a_cell_x, a_cell_y])
         
         self.nodes_added = 0
+        self.no_food_eaten_count = 0
 
     def get_observation(self):
         snake_head = self.snake.head.position
@@ -200,20 +203,39 @@ class WinkerSnake(BaseEnvironment):
     def get_reward(self, action, eaten, is_grid_full):
         reward = 0.0
         terminal = False
+        fruit_reward = 5
+        action_penulty = 0.02
+        death_penulty = 20
+        k = 5
+
+        early_penulty = k * fruit_reward   # k fruit penulty
+        later_penulty = 0.1 * early_penulty
+        min_len = 2
+        max_len = (self.grid.layout[0] * self.grid.layout[1]) - 2
+        t = (self.snake.length - min_len) / (max_len - min_len)
+        wink_penulty = later_penulty + (early_penulty - later_penulty) * (1 - t)**2
+
         if action == 3:   
-            reward -= (2/self.snake.length) * self.reward_obs_term[0]   # wink action
+            reward -= wink_penulty      # wink action   (earlier penulty : k*fruit_reward and later_penulty : 10% of k*fruit_penulty)
         else:       
-            reward -= 0.01                             # For other actions
+            reward -= action_penulty    # For other actions
 
         if eaten:
-            reward += 5
+            reward += fruit_reward
+            self.no_food_eaten_count = 0
+        else:
+            self.no_food_eaten_count += 1
+
+        if self.no_food_eaten_count >= 2*self.grid.layout[0]*self.grid.layout[1]:
+            reward -= 100
+            terminal = True
 
         if self.snake.didCollide(self.grid):
-            reward -= 10
+            reward -= death_penulty
             terminal = True
         
         if is_grid_full == 1:
-            reward -= 10
+            reward -= death_penulty
             terminal = True
 
         return reward, terminal
