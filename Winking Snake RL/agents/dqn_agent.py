@@ -240,3 +240,56 @@ class DQNAgent(BaseAgent):
 
         agent.epsilon = 0.0
         return agent
+
+    @classmethod
+    def load_for_finetuning(cls, path, agent_info_overrides=None, device=None):
+        """
+        Load a checkpoint and prepare the agent for **continued training**.
+
+        The network architecture (state_size, num_actions, hidden_size) is
+        taken from the checkpoint and cannot be overridden.  All learning
+        hyperparameters can be overridden via *agent_info_overrides*.
+
+        Sensible fine-tuning defaults (lower LR, partial exploration):
+            lr                  : 1e-4
+            epsilon_start       : 0.3
+            epsilon_end         : 0.05
+            epsilon_decay_steps : 10_000
+            gamma               : 0.99
+            buffer_capacity     : 50_000
+            batch_size          : 64
+            min_buffer_size     : 500
+            target_sync_every   : 500
+        """
+        agent_info_overrides = agent_info_overrides or {}
+        checkpoint = torch.load(path, map_location="cpu")
+
+        agent_info = {
+            "state_size": checkpoint["state_size"],
+            "num_actions": checkpoint["num_actions"],
+            "hidden_size": checkpoint["hidden_size"],
+            "lr": agent_info_overrides.get("lr", 1e-4),
+            "gamma": agent_info_overrides.get("gamma", 0.99),
+            "epsilon_start": agent_info_overrides.get("epsilon_start", 0.3),
+            "epsilon_end": agent_info_overrides.get("epsilon_end", 0.05),
+            "epsilon_decay_steps": agent_info_overrides.get("epsilon_decay_steps", 10_000),
+            "buffer_capacity": agent_info_overrides.get("buffer_capacity", 50_000),
+            "batch_size": agent_info_overrides.get("batch_size", 64),
+            "min_buffer_size": agent_info_overrides.get("min_buffer_size", 500),
+            "target_sync_every": agent_info_overrides.get("target_sync_every", 500),
+        }
+        if device:
+            agent_info["device"] = device
+
+        # Initialise a fresh agent (creates networks, optimizer, buffer)
+        agent = cls()
+        agent.agent_init(agent_info)
+
+        # Load pretrained weights into both q_network and target_network
+        dev = agent.device
+        q_state = {k: v.to(dev) for k, v in checkpoint["q_network"].items()}
+        agent.q_network.load_state_dict(q_state)
+        agent.target_network.load_state_dict(q_state)
+        agent.target_network.eval()
+
+        return agent
