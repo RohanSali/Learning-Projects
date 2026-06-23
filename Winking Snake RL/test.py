@@ -11,8 +11,8 @@ from agents.dqn_agent import DQNAgent
 
 MODEL_PATH = ROOT_DIR / "models"
 
-GRID_NAME = "Grid_10.png"
-GRID_LAYOUT = (10, 10)
+GRID_NAME = "Grid_5.png"
+GRID_LAYOUT = (5, 5)
 
 ENV_INFO = {
     "grid_layout": GRID_LAYOUT,
@@ -48,8 +48,9 @@ def main():
         step_count = 0
         terminal = False
         running = True
+        label = f"Testing model with {model_name}"
 
-        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward)
+        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label)
 
         while running and not terminal:
             visualizer.tick()
@@ -62,7 +63,7 @@ def main():
             cumulative_reward += reward
             step_count += 1
 
-            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward)
+            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label)
 
         print(
             f"Episode {episode}: steps={step_count}  "
