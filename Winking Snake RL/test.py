@@ -22,7 +22,7 @@ ENV_INFO = {
 }
 
 NUM_EPISODES = 5
-FPS = 10
+FPS = 15
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
         running = True
         label = f"Testing model with {model_name}"
 
-        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label)
+        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal)
 
         while running and not terminal:
             visualizer.tick()
@@ -63,7 +63,7 @@ def main():
             cumulative_reward += reward
             step_count += 1
 
-            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label)
+            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal, action)
 
         print(
             f"Episode {episode}: steps={step_count}  "

@@ -7,13 +7,10 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from environment.snake_env import WinkerSnake
-from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC
+from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_HEIGHT, WIN_WIDTH
 
 GRID_NAME = "Grid_5.png"
 GRID_LAYOUT = (5, 5)
-
-WIN_WIDTH = 440
-WIN_HEIGHT = 500
 
 # Keyboard -> action mapping. Actions are relative to current facing
 # (ahead/right/left), not absolute grid directions, so Up always means
@@ -58,7 +55,7 @@ def debug_env_start():
         win_height=WIN_HEIGHT
     )
     visualizer.init()
-    visualizer.render(env.grid, env.apples, env.snake, score=0, cumulative_reward=0)
+    visualizer.render(env.grid, env.apples, env.snake, score=0, cumulative_reward=0, label="Controller Environment")
 
     cumulative_reward = 0.0
     step_count = 0
@@ -99,7 +96,7 @@ def debug_env_start():
         print()
 
         score = env.env_message("score")
-        visualizer.render(env.grid, env.apples, env.snake, score=score, cumulative_reward=cumulative_reward)
+        visualizer.render(env.grid, env.apples, env.snake, score=score, cumulative_reward=cumulative_reward, label="Controller Environment", terminal=terminal, action_taken=action)
 
     if terminal:
         print("=== Episode ended ===")

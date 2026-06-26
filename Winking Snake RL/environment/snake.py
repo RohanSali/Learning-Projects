@@ -62,6 +62,8 @@ class Snake():
 
     def move_head(self):
         """Move head one step in its current direction."""
+        self.head.last_pos = self.head.position.copy()
+
         if self.head.facing == 0:      # Up
             self.head.position[1] -= 1
         elif self.head.facing == 1:    # Right
@@ -73,17 +75,20 @@ class Snake():
 
     def ahead(self):
         self.move_body()
+        self.head.last_facing = self.head.facing
         self.move_head()
         self.head.whichTurn = 0
 
     def right(self):
         self.move_body()
+        self.head.last_facing = self.head.facing
         self.head.facing = (self.head.facing + 1) % 4  # Look towards Right
         self.move_head()
         self.head.whichTurn = 1
 
     def left(self):
         self.move_body()
+        self.head.last_facing = self.head.facing
         self.head.facing = (self.head.facing - 1) % 4  # Look towards Left
         self.move_head()
         self.head.whichTurn = 2

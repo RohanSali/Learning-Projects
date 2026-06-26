@@ -237,6 +237,8 @@ class Visualizer:
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Body.png")), cs),
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "RightTurn.png")), cs),
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "LeftTurn.png")), cs),
+            pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Wink.png")), cs),
+            pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Collide.png")), cs),
         ]
         self.apple_img = pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Apple.png")), cs)
 
@@ -266,7 +268,7 @@ class Visualizer:
             self.clock.tick(fps)
 
     def _draw_game_view(self, grid, apples, snake, score,
-                        cumulative_reward, label: str = ""):
+                        cumulative_reward, label, terminal, action_taken):
         """
         Blit the game background, grid, apples and snake onto self.win.
         Scores are positioned inside the left WIN_WIDTH-px column.
@@ -301,20 +303,33 @@ class Visualizer:
 
         # Snake
         for i in range(snake.length):
+            if terminal:
+                if snake.length>2 and i == 1:
+                    continue
+
             node_type = snake.nodes[i].nodeType
             position = snake.nodes[i].position
-            x, y = grid.get_location(position[0], position[1])
             face = snake.nodes[i].facing
 
             idx = node_type
-            if node_type == 2:
+            if node_type == 0:
+                if action_taken == 3:
+                    idx = 5
+                if terminal:
+                    idx = 6
+                    position = snake.nodes[i].last_pos
+                    face = snake.nodes[i].last_facing
+            elif node_type == 2:
                 turn = snake.nodes[i - 1].whichTurn
                 if turn == 1:
                     idx = 3
                 elif turn == 2:
                     idx = 4
             elif node_type == 1:
-                face = snake.nodes[i - 1].facing
+                if terminal and snake.length==2:
+                    position = snake.nodes[i].last_pos
+                else:
+                    face = snake.nodes[i - 1].facing
 
             image = self.snake_imgs[idx]
 
@@ -326,25 +341,30 @@ class Visualizer:
             elif face == 3:
                 rotation = 90  # 270 deg anti-clockwise
             rotated_image = pygame.transform.rotate(image, rotation)
+
+            x, y = grid.get_location(position[0], position[1])
+
             new_rect = rotated_image.get_rect(
                 center=image.get_rect(topleft=(x, y)).center
             )  # keep centered correctly after rotation
 
             self.win.blit(rotated_image, new_rect.topleft)
 
-    def render(self, grid, apples, snake, score, cumulative_reward, label = ""):
+
+    def render(self, grid, apples, snake, score, cumulative_reward, label = "", terminal: bool = False, action_taken: int = 0):
         """
         Original game-only render (debug.py / test.py compatible).
         Window size should be WIN_WIDTH x WIN_HEIGHT.
         """
         if not self._initialized:
             self.init()
-        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label)
+        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label, action_taken, terminal)
         pygame.display.update()
 
     def render_training(self, grid, apples, snake, score, cumulative_reward,
                         episode_returns: list, epsilon: float,
-                        episode: int, num_episodes: int, print_every: int):
+                        episode: int, num_episodes: int, print_every: int,
+                        terminal: bool = False, action_taken: int = 0):
         """
         Training render: game on the left, live reward graph on the right.
         Requires win_width >= TRAINING_WIN_WIDTH.
@@ -352,7 +372,7 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                              label="Training Phase")
+                              label="Training Phase", action_taken=action_taken, terminal=terminal)
         if self._graph_panel is not None:
             self._graph_panel.draw(
                 self.win, episode_returns, epsilon,
@@ -360,7 +380,7 @@ class Visualizer:
         pygame.display.update()
 
     def render_demo(self, grid, apples, snake, score, cumulative_reward,
-                    episode_label: str = ""):
+                    episode_label: str = "", terminal: bool = False, action_taken: int = 0):
         """
         Demo render: game view with an optional banner label at the top.
         Used for post-checkpoint greedy playthroughs.
@@ -368,9 +388,13 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                             label=episode_label)
+                             episode_label, action_taken, terminal)
         pygame.display.update()
 
+    def save_frame(self, filepath: str):
+        """Save the current window surface to an image file."""
+        if self._initialized and self.win is not None:
+            pygame.image.save(self.win, filepath)
 
     def close(self):
         if self._initialized:

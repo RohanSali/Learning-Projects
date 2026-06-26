@@ -21,10 +21,13 @@ from visualizer.pygame_visualizer import (
 MODELS_DIR = ROOT_DIR / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
+RESULTS_DIR = ROOT_DIR / "results"
+RESULTS_DIR.mkdir(exist_ok=True)
+
 # Training toggle
 HEADLESS = False          # True → no window, maximum speed and  False → live game + graph panel
 
-DEMO_FPS = 5             # FPS for the post-checkpoint greedy demo
+DEMO_FPS = 15             # FPS for the post-checkpoint greedy demo
 TRAIN_FPS = 0             # 0 = uncapped during live training episodes
 
 ENV_INFO = {
@@ -34,7 +37,9 @@ ENV_INFO = {
     "apple_count": 1,
 }
 
+
 GRID_NAME = f"Grid_{ENV_INFO['grid_layout'][0]}.png"
+CELLS = ENV_INFO['grid_layout'][0] * ENV_INFO['grid_layout'][1]
 
 AGENT_INFO = {
     "state_size": 13,
@@ -44,11 +49,11 @@ AGENT_INFO = {
     "gamma": 0.99,
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
-    "epsilon_decay_steps": 20_000,
-    "buffer_capacity": 50_000,
+    "epsilon_decay_steps": 300 * CELLS,
+    "buffer_capacity": max(50_000, 100 * CELLS),
     "batch_size": 64,
-    "min_buffer_size": 1_000,
-    "target_sync_every": 500,
+    "min_buffer_size": max(1000, 10 * CELLS),
+    "target_sync_every": max(500, CELLS),
     "seed": 0,
 }
 
@@ -116,6 +121,7 @@ def run_episode_visual(rl_glue: RLGlue, visualizer: Visualizer,
 
         rl_step_result = rl_glue.rl_step()
         is_terminal = rl_step_result[3]
+        action_taken = rl_glue.last_action
 
         epsilon = rl_glue.rl_agent_message("epsilon")
         score = rl_glue.rl_env_message("score")
@@ -125,6 +131,7 @@ def run_episode_visual(rl_glue: RLGlue, visualizer: Visualizer,
             score, rl_glue.total_reward,
             episode_returns, epsilon,
             episode, num_episodes, print_every,
+            is_terminal, action_taken
         )
 
     return rl_glue.rl_return()
@@ -161,6 +168,7 @@ def run_demo_episode(rl_glue: RLGlue, visualizer: Visualizer,
             env.grid, env.apples, env.snake,
             score, round(cumulative_reward, 2),
             episode_label=f"GREEDY DEMO  step {step + 1}/{max_steps}",
+            terminal=terminal, action_taken=action
         )
         step += 1
 
@@ -241,6 +249,13 @@ def main():
     )
     print(f"\nModel saved  → {model_path}")
     print(f"Log updated  → {MODELS_DIR / 'trained_model_log.csv'}")
+
+    # Save the last frame
+    if not HEADLESS and visualizer is not None:
+        model_name_no_ext = model_name.replace(".pt", "")
+        frame_path = RESULTS_DIR / f"result_{model_name_no_ext}.png"
+        visualizer.save_frame(str(frame_path))
+        print(f"Last frame saved → {frame_path}")
 
     rl_glue.rl_cleanup()
 
