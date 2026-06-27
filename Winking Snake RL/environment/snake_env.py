@@ -203,9 +203,9 @@ class WinkerSnake(BaseEnvironment):
     def get_reward(self, action, eaten, is_grid_full):
         reward = 0.0
         terminal = False
-        fruit_reward = 5
-        action_penulty = 0.02
-        death_penulty = 20
+        fruit_reward = 5  # or 10
+        action_penulty = 0.02  # or 0.01
+        death_penulty = 20  # or 50
         k = 5
 
         early_penulty = k * fruit_reward   # k fruit penulty
@@ -239,6 +239,57 @@ class WinkerSnake(BaseEnvironment):
             terminal = True
 
         return reward, terminal
+    
+class WinkerSnake2(WinkerSnake):
+    """Environment for Snake (Position Independent) with state space of len 11 and action space of len 4"""
+    # State: [head_facing, snake_length, closest_food_distance, is_food_up, is_food_right,
+    #         is_food_down, is_food_left, is_danger_ahead, is_danger_right_side,
+    #         is_danger_left_side, is_grid_full]
+
+    def __init__(self):
+        super().__init__()
+        self.current_state = np.zeros(11)
+
+    def get_observation(self):
+        snake_head = self.snake.head.position
+        snake_facing = self.snake.head.facing
+        snake_length = self.snake.length
+
+        closest_apple = get_closest_apple(snake_head, self.apples)
+        if closest_apple is not None:
+            closest_food = closest_apple.position
+            closest_food_distance = manhattan_distance(snake_head, closest_food)
+        else:
+            closest_food_distance = -1
+
+        food_intuition_vector = get_food_intuition_vector(snake_head, self.apples)
+
+        snake_body_positions = [node.position for node in self.snake.nodes]
+        danger_vector = get_danger_vector(snake_head, snake_facing, snake_body_positions, self.grid.layout)
+
+        is_grid_full = 1 if (self.apple_count + self.snake.length >= (self.grid.layout[0] * self.grid.layout[1])) else 0
+
+        observation = np.array(
+            [
+                snake_facing,
+                snake_length,
+                closest_food_distance,
+                *food_intuition_vector,
+                *danger_vector,
+                is_grid_full,
+            ],
+            dtype=np.float32,
+        )
+
+        return observation
+    
+    def env_cleanup(self):
+        self.snake = None
+        self.apples = []
+        self.current_state = np.zeros(11)
+        self.reward_obs_term = None
+        self.nodes_added = 0
+        self.no_food_eaten_count = 0
 
 # Utility Functions:
 def manhattan_distance(pos_a, pos_b):

@@ -6,7 +6,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from environment.snake_env import WinkerSnake
+from environment.snake_env import WinkerSnake, WinkerSnake2
 from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_HEIGHT, WIN_WIDTH
 
 GRID_LAYOUT = (5, 5)
