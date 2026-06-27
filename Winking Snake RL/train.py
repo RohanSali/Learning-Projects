@@ -37,8 +37,6 @@ ENV_INFO = {
     "apple_count": 1,
 }
 
-
-GRID_NAME = f"Grid_{ENV_INFO['grid_layout'][0]}.png"
 CELLS = ENV_INFO['grid_layout'][0] * ENV_INFO['grid_layout'][1]
 
 AGENT_INFO = {
@@ -185,7 +183,6 @@ def main():
         import pygame
         pygame.init()
         visualizer = Visualizer(
-            grid_name=GRID_NAME,
             grid_layout=ENV_INFO["grid_layout"],
             fps=TRAIN_FPS,
             win_width=TRAINING_WIN_WIDTH,

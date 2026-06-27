@@ -53,9 +53,6 @@ PRINT_EVERY = 100
 HEADLESS = False   # True → headless, False → live window + graph
 DEMO_FPS = 5       # FPS for the post-checkpoint greedy demo
 
-GRID_NAME = f"Grid_{FINETUNE_ENV_INFO['grid_layout'][0]}.png"
-
-
 def main():
     load_path = Path(LOAD_MODEL_PATH)
     if not load_path.exists():
@@ -102,7 +99,6 @@ def main():
         import pygame
         pygame.init()
         visualizer = Visualizer(
-            grid_name=GRID_NAME,
             grid_layout=FINETUNE_ENV_INFO["grid_layout"],
             fps=0,   # uncapped during training steps
             win_width=TRAINING_WIN_WIDTH,

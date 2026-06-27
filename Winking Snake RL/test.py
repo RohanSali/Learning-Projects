@@ -11,7 +11,6 @@ from agents.dqn_agent import DQNAgent
 
 MODEL_PATH = ROOT_DIR / "models"
 
-GRID_NAME = "Grid_5.png"
 GRID_LAYOUT = (5, 5)
 
 ENV_INFO = {
@@ -34,7 +33,6 @@ def main():
     agent = DQNAgent.load_for_inference(model_path)
 
     visualizer = Visualizer(
-        grid_name=GRID_NAME,
         grid_layout=GRID_LAYOUT,
         fps=FPS,
         win_width=WIN_WIDTH,

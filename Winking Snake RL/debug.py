@@ -9,7 +9,6 @@ if str(ROOT_DIR) not in sys.path:
 from environment.snake_env import WinkerSnake
 from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_HEIGHT, WIN_WIDTH
 
-GRID_NAME = "Grid_5.png"
 GRID_LAYOUT = (5, 5)
 
 # Keyboard -> action mapping. Actions are relative to current facing
@@ -48,7 +47,6 @@ def debug_env_start():
     print()
 
     visualizer = Visualizer(
-        grid_name=GRID_NAME,
         grid_layout=env.grid.layout,
         fps=2,
         win_width=WIN_WIDTH,

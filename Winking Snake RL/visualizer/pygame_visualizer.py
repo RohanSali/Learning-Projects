@@ -196,12 +196,11 @@ class Visualizer:
       • render_demo()      game view with an episode label banner
     """
 
-    def __init__(self, grid_name: str = "Grid.png",
+    def __init__(self,
                  grid_layout: tuple = (10, 10),
                  fps: int = 5,
                  win_width: int = WIN_WIDTH,
                  win_height: int = WIN_HEIGHT):
-        self.grid_name   = grid_name
         self.grid_layout = grid_layout
         self.cell_size = (
             int(GRID_SIZE[0] / grid_layout[0]),
@@ -230,7 +229,7 @@ class Visualizer:
 
         cs = self.cell_size
         self.bg_img = pygame.image.load(os.path.join(IMG_DIR, "BgIMG2.png"))
-        self.grid_img = pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, self.grid_name)), GRID_SIZE)
+        self.grid_img = self._load_and_prepare_grid_image()
         self.snake_imgs = [
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Head.png")), cs),
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Tail.png")), cs),
@@ -252,6 +251,22 @@ class Visualizer:
             )
 
         self._initialized = True
+
+    def _load_and_prepare_grid_image(self):
+        grid_image = pygame.image.load(os.path.join(IMG_DIR, "Grid.png"))
+        image_width, image_height = grid_image.get_size()
+
+        cols, rows = self.grid_layout
+        cell_width = image_width // 50             # Considering total 50 cell cols in Grid.png
+        cell_height = image_height // 50           # Considering total 50 cell rows in Grid.png
+
+        crop_width = cols * cell_width
+        crop_height = rows * cell_height
+
+        crop_rect = pygame.Rect(0, 0, crop_width, crop_height)
+        cropped_grid = grid_image.subsurface(crop_rect).copy()
+
+        return pygame.transform.scale(cropped_grid, GRID_SIZE)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -358,7 +373,7 @@ class Visualizer:
         """
         if not self._initialized:
             self.init()
-        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label, action_taken, terminal)
+        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label, terminal, action_taken)
         pygame.display.update()
 
     def render_training(self, grid, apples, snake, score, cumulative_reward,
@@ -372,7 +387,7 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                              label="Training Phase", action_taken=action_taken, terminal=terminal)
+                              label="Training Phase", terminal=terminal, action_taken=action_taken)
         if self._graph_panel is not None:
             self._graph_panel.draw(
                 self.win, episode_returns, epsilon,
@@ -388,7 +403,7 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                             episode_label, action_taken, terminal)
+                             episode_label, terminal, action_taken)
         pygame.display.update()
 
     def save_frame(self, filepath: str):
