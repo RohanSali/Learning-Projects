@@ -6,7 +6,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from environment.snake_env import WinkerSnake, WinkerSnake2
+from environment.snake_env import WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
 from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_HEIGHT, WIN_WIDTH
 
 GRID_LAYOUT = (5, 5)
@@ -25,7 +25,7 @@ WINK_KEY = pygame.K_w
 
 
 def debug_env_start():
-    env = WinkerSnake()
+    env = WinkNPoopSnake2()
     env_info = {
         'grid_layout': GRID_LAYOUT,
         'grid_size': GRID_SIZE,
@@ -53,7 +53,9 @@ def debug_env_start():
         win_height=WIN_HEIGHT
     )
     visualizer.init()
-    visualizer.render(env.grid, env.apples, env.snake, score=0, cumulative_reward=0, label="Controller Environment")
+
+    poops = getattr(env, "poops", [])
+    visualizer.render(env.grid, env.apples, env.snake, score=0, cumulative_reward=0, label="Controller Environment", poops=poops)
 
     cumulative_reward = 0.0
     step_count = 0
@@ -94,7 +96,9 @@ def debug_env_start():
         print()
 
         score = env.env_message("score")
-        visualizer.render(env.grid, env.apples, env.snake, score=score, cumulative_reward=cumulative_reward, label="Controller Environment", terminal=terminal, action_taken=action)
+
+        poops = getattr(env, "poops", [])
+        visualizer.render(env.grid, env.apples, env.snake, score=score, cumulative_reward=cumulative_reward, label="Controller Environment", terminal=terminal, action_taken=action, poops=poops)
 
     if terminal:
         print("=== Episode ended ===")

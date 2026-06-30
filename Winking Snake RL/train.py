@@ -10,13 +10,16 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from rlglue.rl_glue import RLGlue
-from environment.snake_env import WinkerSnake, WinkerSnake2
+from environment.snake_env import WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
 from agents.dqn_agent import DQNAgent
 from visualizer.pygame_visualizer import (
     Visualizer,
     GRID_LOC, GRID_SIZE,
     WIN_HEIGHT, TRAINING_WIN_WIDTH,
 )
+
+SELECTED_ENV = WinkNPoopSnake2
+SELECTED_AGENT = DQNAgent
 
 MODELS_DIR = ROOT_DIR / "models"
 MODELS_DIR.mkdir(exist_ok=True)
@@ -124,12 +127,14 @@ def run_episode_visual(rl_glue: RLGlue, visualizer: Visualizer,
         epsilon = rl_glue.rl_agent_message("epsilon")
         score = rl_glue.rl_env_message("score")
 
+        poops = getattr(env, "poops", [])
+
         visualizer.render_training(
             env.grid, env.apples, env.snake,
             score, rl_glue.total_reward,
             episode_returns, epsilon,
             episode, num_episodes, print_every,
-            is_terminal, action_taken
+            is_terminal, action_taken, poops
         )
 
     return rl_glue.rl_return()
@@ -162,11 +167,13 @@ def run_demo_episode(rl_glue: RLGlue, visualizer: Visualizer,
         cumulative_reward += reward
         score = env.env_message("score")
 
+        poops = getattr(env, "poops", [])
+
         visualizer.render_demo(
             env.grid, env.apples, env.snake,
             score, round(cumulative_reward, 2),
             episode_label=f"GREEDY DEMO  step {step + 1}/{max_steps}",
-            terminal=terminal, action_taken=action
+            terminal=terminal, action_taken=action, poops=poops
         )
         step += 1
 
@@ -174,7 +181,8 @@ def run_demo_episode(rl_glue: RLGlue, visualizer: Visualizer,
 
 
 def main():
-    rl_glue = RLGlue(WinkerSnake2, DQNAgent)
+    rl_glue = RLGlue(SELECTED_ENV, SELECTED_AGENT)
+    AGENT_INFO["state_size"] = rl_glue.environment.current_state.size
     rl_glue.rl_init(agent_init_info=AGENT_INFO, env_init_info=ENV_INFO)
     visualizer   = None
     window_open  = True
@@ -236,8 +244,8 @@ def main():
 
     model_path, model_name = save_model_with_log(
         agent = rl_glue.agent,
-        env_class = WinkerSnake2,
-        agent_class = DQNAgent,
+        env_class = SELECTED_ENV,
+        agent_class = SELECTED_AGENT,
         env_info = ENV_INFO,
         agent_info = AGENT_INFO,
         num_episodes = NUM_EPISODES,

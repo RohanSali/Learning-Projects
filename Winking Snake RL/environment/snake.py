@@ -17,6 +17,8 @@ class Snake():
 
         self.nodes = [self.head, self.tail]
 
+        self.winked = False
+
     def get_next_node_loc(self, parent_position, parent_facing):
         child_pos = None
         if parent_facing == 0:  # Facing Top
@@ -111,8 +113,11 @@ class Snake():
 
             self.nodes.append(self.tail)
             self.length = 2
+
+            self.winked = True
         else :
             self.ahead()
+            self.winked = False
         
 
     def didCollide(self, grid):
@@ -133,6 +138,10 @@ class Apple:
     def __init__(self, position):
         self.position = position
         self.eaten = False
+
+class Poop:
+    def __init__(self, position):
+        self.position = position
 
 class Grid:
     def __init__(self, grid_layout, grid_size, grid_location):

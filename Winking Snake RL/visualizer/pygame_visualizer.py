@@ -240,6 +240,7 @@ class Visualizer:
             pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Collide.png")), cs),
         ]
         self.apple_img = pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Apple.png")), cs)
+        self.poop_img = pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, "Poop.png")), cs)
 
         # Create graph panel only when the window is wide enough
         if self.win_width > WIN_WIDTH:
@@ -283,7 +284,7 @@ class Visualizer:
             self.clock.tick(fps)
 
     def _draw_game_view(self, grid, apples, snake, score,
-                        cumulative_reward, label, terminal, action_taken):
+                        cumulative_reward, label, terminal, action_taken, poops):
         """
         Blit the game background, grid, apples and snake onto self.win.
         Scores are positioned inside the left WIN_WIDTH-px column.
@@ -315,6 +316,11 @@ class Visualizer:
         for apple in apples:
             x, y = grid.get_location(apple.position[0], apple.position[1])
             self.win.blit(self.apple_img, (x, y))
+
+        # Poops
+        for poop in poops:
+            x, y = grid.get_location(poop.position[0], poop.position[1])
+            self.win.blit(self.poop_img, (x, y))
 
         # Snake
         for i in range(snake.length):
@@ -366,20 +372,20 @@ class Visualizer:
             self.win.blit(rotated_image, new_rect.topleft)
 
 
-    def render(self, grid, apples, snake, score, cumulative_reward, label = "", terminal: bool = False, action_taken: int = 0):
+    def render(self, grid, apples, snake, score, cumulative_reward, label = "", terminal: bool = False, action_taken: int = 0, poops: list = []):
         """
         Original game-only render (debug.py / test.py compatible).
         Window size should be WIN_WIDTH x WIN_HEIGHT.
         """
         if not self._initialized:
             self.init()
-        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label, terminal, action_taken)
+        self._draw_game_view(grid, apples, snake, score, cumulative_reward, label, terminal, action_taken, poops)
         pygame.display.update()
 
     def render_training(self, grid, apples, snake, score, cumulative_reward,
                         episode_returns: list, epsilon: float,
                         episode: int, num_episodes: int, print_every: int,
-                        terminal: bool = False, action_taken: int = 0):
+                        terminal: bool = False, action_taken: int = 0, poops: list = []):
         """
         Training render: game on the left, live reward graph on the right.
         Requires win_width >= TRAINING_WIN_WIDTH.
@@ -387,7 +393,7 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                              label="Training Phase", terminal=terminal, action_taken=action_taken)
+                              label="Training Phase", terminal=terminal, action_taken=action_taken, poops=poops)
         if self._graph_panel is not None:
             self._graph_panel.draw(
                 self.win, episode_returns, epsilon,
@@ -395,7 +401,7 @@ class Visualizer:
         pygame.display.update()
 
     def render_demo(self, grid, apples, snake, score, cumulative_reward,
-                    episode_label: str = "", terminal: bool = False, action_taken: int = 0):
+                    episode_label: str = "", terminal: bool = False, action_taken: int = 0, poops: list = []):
         """
         Demo render: game view with an optional banner label at the top.
         Used for post-checkpoint greedy playthroughs.
@@ -403,7 +409,7 @@ class Visualizer:
         if not self._initialized:
             self.init()
         self._draw_game_view(grid, apples, snake, score, cumulative_reward,
-                             episode_label, terminal, action_taken)
+                             episode_label, terminal, action_taken, poops)
         pygame.display.update()
 
     def save_frame(self, filepath: str):

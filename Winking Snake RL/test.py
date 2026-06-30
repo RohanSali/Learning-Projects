@@ -5,7 +5,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from environment.snake_env import WinkerSnake, WinkerSnake2
+from environment.snake_env import WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
 from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_WIDTH, WIN_HEIGHT
 from agents.dqn_agent import DQNAgent
 
@@ -25,7 +25,7 @@ FPS = 15
 
 
 def main():
-    env = WinkerSnake2()
+    env = WinkNPoopSnake2()
     env.env_init(env_info=ENV_INFO)
 
     model_name = input("Enter model name to test : ")
@@ -48,7 +48,9 @@ def main():
         running = True
         label = f"Testing model with {model_name}"
 
-        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal)
+        poops = getattr(env, "poops", [])
+
+        visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal, poops)
 
         while running and not terminal:
             visualizer.tick()
@@ -61,7 +63,9 @@ def main():
             cumulative_reward += reward
             step_count += 1
 
-            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal, action)
+            poops = getattr(env, "poops", [])
+
+            visualizer.render(env.grid, env.apples, env.snake, env.nodes_added, cumulative_reward, label, terminal, action, poops)
 
         print(
             f"Episode {episode}: steps={step_count}  "
