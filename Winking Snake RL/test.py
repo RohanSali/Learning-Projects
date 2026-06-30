@@ -5,7 +5,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from environment.snake_env import WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
+from environment.snake_env import SimpleSnake, SimpleSnake2, WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
 from visualizer.pygame_visualizer import Visualizer, GRID_SIZE, GRID_LOC, WIN_WIDTH, WIN_HEIGHT
 from agents.dqn_agent import DQNAgent
 
@@ -25,7 +25,7 @@ FPS = 15
 
 
 def main():
-    env = WinkNPoopSnake2()
+    env = SimpleSnake2()
     env.env_init(env_info=ENV_INFO)
 
     model_name = input("Enter model name to test : ")

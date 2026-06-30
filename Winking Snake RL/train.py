@@ -10,7 +10,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from rlglue.rl_glue import RLGlue
-from environment.snake_env import WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
+from environment.snake_env import SimpleSnake, SimpleSnake2, WinkerSnake, WinkerSnake2, WinkNPoopSnake, WinkNPoopSnake2
 from agents.dqn_agent import DQNAgent
 from visualizer.pygame_visualizer import (
     Visualizer,
@@ -18,7 +18,7 @@ from visualizer.pygame_visualizer import (
     WIN_HEIGHT, TRAINING_WIN_WIDTH,
 )
 
-SELECTED_ENV = WinkNPoopSnake2
+SELECTED_ENV = SimpleSnake2
 SELECTED_AGENT = DQNAgent
 
 MODELS_DIR = ROOT_DIR / "models"
@@ -44,7 +44,7 @@ CELLS = ENV_INFO['grid_layout'][0] * ENV_INFO['grid_layout'][1]
 
 AGENT_INFO = {
     "state_size": 11,
-    "num_actions": 4,
+    "num_actions": 3,
     "hidden_size": 128,
     "lr": 1e-3,
     "gamma": 0.99,
