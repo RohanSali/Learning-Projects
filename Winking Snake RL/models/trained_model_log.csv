@@ -1,3 +1,4 @@
 model_name,environment_name,agent_name,grid_layout,apple_count,hidden_neurons,num_episodes,max_steps,datetime_string
 model_WinkerSnake2_DQNAgent_2026-06-25_20-46-56.pt,WinkerSnake2,DQNAgent,"(5, 5)",1,128,2000,500,2026-06-25_20-46-56
 model_WinkerSnake2_DQNAgent_2026-06-26_08-32-42.pt,WinkerSnake2,DQNAgent,"(40, 40)",1,128,5000,1500,2026-06-26_08-32-42
+model_WinkNPoopSnake2_DQNAgent_2026-07-01_00-55-02.pt,WinkNPoopSnake2,DQNAgent,"(5, 5)",1,128,2000,500,2026-07-01_00-55-02
