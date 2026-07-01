@@ -18,33 +18,44 @@ from visualizer.pygame_visualizer import (
     WIN_HEIGHT, TRAINING_WIN_WIDTH,
 )
 
-SELECTED_ENV = SimpleSnake2
-SELECTED_AGENT = DQNAgent
-
 MODELS_DIR = ROOT_DIR / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
 RESULTS_DIR = ROOT_DIR / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
-# Training toggle
-HEADLESS = False          # True → no window, maximum speed and  False → live game + graph panel
+ENVS = {
+    "SimpleSnake": {"class": SimpleSnake, "states": 13, "actions": 3, "code": "SS"},
+    "SimpleSnake2": {"class": SimpleSnake2, "states": 11, "actions": 3, "code": "SS2"},
+    "WinkerSnake": {"class": WinkerSnake, "states": 13, "actions": 4, "code": "WS"},
+    "WinkerSnake2": {"class": WinkerSnake2, "states": 11, "actions": 4, "code": "WS2"},
+    "WinkNPoopSnake": {"class": WinkNPoopSnake, "states": 17, "actions": 4, "code": "WPS"},
+    "WinkNPoopSnake2": {"class": WinkNPoopSnake2, "states": 15, "actions": 4, "code": "WPS2"},
+}
 
-DEMO_FPS = 15             # FPS for the post-checkpoint greedy demo
-TRAIN_FPS = 0             # 0 = uncapped during live training episodes
+AGENTS = {
+    "DQNAgent" : {"class": DQNAgent, "code": "DQN"}
+}
+
+SELECTED_ENV = "SimpleSnake"
+SELECTED_AGENT = "DQNAgent"
+
+GRID_LAYOUT = (5, 5)
+APPLE_COUNT = 1
+
 
 ENV_INFO = {
-    "grid_layout": (5, 5),
+    "grid_layout": GRID_LAYOUT,
     "grid_size": GRID_SIZE,
     "grid_location": GRID_LOC,
-    "apple_count": 1,
+    "apple_count": APPLE_COUNT,
 }
 
 CELLS = ENV_INFO['grid_layout'][0] * ENV_INFO['grid_layout'][1]
 
 AGENT_INFO = {
-    "state_size": 11,
-    "num_actions": 3,
+    "state_size": ENVS[SELECTED_ENV]["states"],
+    "num_actions": ENVS[SELECTED_ENV]["actions"],
     "hidden_size": 128,
     "lr": 1e-3,
     "gamma": 0.99,
@@ -58,19 +69,25 @@ AGENT_INFO = {
     "seed": 0,
 }
 
-NUM_EPISODES = 2000
-MAX_STEPS_PER_EPISODE = 500   # safety cap so a stuck agent can't run forever
-PRINT_EVERY = 100
+# Training toggle
+HEADLESS = False          # True → no window, maximum speed and  False → live game + graph panel
+DEMO_FPS = 15             # FPS for the post-checkpoint greedy demo
+TRAIN_FPS = 0             # 0 = uncapped during live training episodes
 
-def save_model_with_log(agent, env_class, agent_class,
+NUM_EPISODES = 2000
+PRINT_EVERY = 100
+MAX_STEPS_PER_EPISODE = 10 * CELLS   # safety cap so a stuck agent can't run forever
+
+def save_model_with_log(agent, env_name, agent_name,
                         env_info: dict, agent_info: dict,
                         num_episodes: int, max_steps: int,
                         models_dir: Path):
     """Save the model checkpoint and append a row to trained_model_log.csv """
-    env_name = env_class.__name__
-    agent_name = agent_class.__name__
-    dt_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"model_{env_name}_{agent_name}_{dt_str}.pt"
+    dt = datetime.now()
+    dt_code = dt.strftime("%Y%m%d%H%M")
+    env_code = ENVS[SELECTED_ENV]["code"]
+    agent_code = AGENTS[SELECTED_AGENT]["code"]
+    filename = f"model_{env_code}_{agent_code}_{dt_code}.pt"
     model_path = models_dir / filename
 
     agent.save(model_path)
@@ -79,7 +96,7 @@ def save_model_with_log(agent, env_class, agent_class,
     fieldnames = [
         "model_name", "environment_name", "agent_name",
         "grid_layout", "apple_count", "hidden_neurons",
-        "num_episodes", "max_steps", "datetime_string",
+        "num_episodes", "max_steps", "datetime",
     ]
     row = {
         "model_name": filename,
@@ -90,7 +107,7 @@ def save_model_with_log(agent, env_class, agent_class,
         "hidden_neurons": agent_info.get("hidden_size", "?"),
         "num_episodes": num_episodes,
         "max_steps": max_steps,
-        "datetime_string": dt_str,
+        "datetime": dt,
     }
     write_header = not log_path.exists()
     with open(log_path, "a", newline="") as f:
@@ -181,8 +198,7 @@ def run_demo_episode(rl_glue: RLGlue, visualizer: Visualizer,
 
 
 def main():
-    rl_glue = RLGlue(SELECTED_ENV, SELECTED_AGENT)
-    AGENT_INFO["state_size"] = rl_glue.environment.current_state.size
+    rl_glue = RLGlue(ENVS[SELECTED_ENV]["class"], AGENTS[SELECTED_AGENT]["class"])
     rl_glue.rl_init(agent_init_info=AGENT_INFO, env_init_info=ENV_INFO)
     visualizer   = None
     window_open  = True
@@ -244,8 +260,8 @@ def main():
 
     model_path, model_name = save_model_with_log(
         agent = rl_glue.agent,
-        env_class = SELECTED_ENV,
-        agent_class = SELECTED_AGENT,
+        env_name = SELECTED_ENV,
+        agent_name = SELECTED_AGENT,
         env_info = ENV_INFO,
         agent_info = AGENT_INFO,
         num_episodes = NUM_EPISODES,

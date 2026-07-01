@@ -839,7 +839,7 @@ class WinkNPoopSnake(BaseEnvironment):
 
 # Snake with Wink action, Cell-Blockage through Poop and Postion-independent environment
 class WinkNPoopSnake2(WinkNPoopSnake):
-    """Environment for Snake (Position Independent) with state space of len 11 and action space of len 4"""
+    """Environment for Snake (Position Independent) with state space of len 15 and action space of len 4"""
     # State: [head_facing, snake_length, closest_food_distance, is_food_up, is_food_right,
     #         is_food_down, is_food_left, is_danger_ahead, is_danger_right_side, is_danger_left_side,
     #         is_poop_ahead, is_poop_right_side, is_poop_left_side, poop_count, is_grid_full]
